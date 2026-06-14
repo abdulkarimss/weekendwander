@@ -1,0 +1,47 @@
+# OpenShift / Kubernetes CronJob. Build & push the image first:
+#   oc new-build --binary --name=weekendwander -l app=weekendwander
+#   oc start-build weekendwander --from-dir=. --follow
+# Secrets:
+#   oc create secret generic weekendwander-secrets \
+#     --from-literal=TP_TOKEN=xxx \
+#     --from-literal=TG_BOT_TOKEN=xxx \
+#     --from-literal=TG_CHAT_ID=xxx
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: weekendwander
+  labels: { app: weekendwander }
+spec:
+  schedule: "0 */6 * * *"          # every 6 hours
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      backoffLimit: 1
+      template:
+        spec:
+          restartPolicy: Never
+          containers:
+            - name: weekendwander
+              image: image-registry.openshift-image-registry.svc:5000/weekendwander/weekendwander:latest
+              envFrom:
+                - secretRef: { name: weekendwander-secrets }
+              resources:
+                requests: { cpu: 50m, memory: 128Mi }
+                limits:   { cpu: 250m, memory: 256Mi }
+              volumeMounts:
+                - { name: state, mountPath: /app/state }
+              env:
+                - { name: STATE_DIR, value: /app/state }
+          volumes:
+            - name: state
+              persistentVolumeClaim: { claimName: weekendwander-state }
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: weekendwander-state
+spec:
+  accessModes: [ReadWriteOnce]
+  resources: { requests: { storage: 100Mi } }

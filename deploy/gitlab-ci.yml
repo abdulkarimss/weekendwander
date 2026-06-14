@@ -1,0 +1,12 @@
+# Scheduled GitLab CI pipeline (Settings -> CI/CD -> Schedules, every 6h).
+# Add CI/CD variables (masked): TP_TOKEN, TG_BOT_TOKEN, TG_CHAT_ID.
+weekend-deals:
+  image: python:3.12-slim
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "schedule"'
+  cache:
+    key: ww-state
+    paths: [weekendwander_state.db]
+  script:
+    - pip install -r requirements.txt
+    - python -m weekendwander.cli --config config.yaml

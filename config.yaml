@@ -1,0 +1,54 @@
+# ── WeekendWander config ──────────────────────────────────────────────
+# Secrets (tokens) do NOT go here — set them in .env (see .env.example).
+
+provider: travelpayouts          # flight price source
+
+# --- Where you fly from / who you are ---
+origin: RUH                      # your home airport (IATA). RUH = Riyadh
+nationality: SAU                 # ⚠️ CHANGE THIS to YOUR passport (ISO3 code).
+                                 #    Visa results are wrong if this is wrong.
+                                 #    e.g. SAU, YEM, EGY, IND, PAK, GBR, USA ...
+currency: sar
+market: sa
+
+# --- What counts as a deal ---
+max_price: 1200                  # only notify on round-trips at/under this (SAR)
+direct_only: false               # true = non-stop flights only
+easy_visa_only: false            # true = only visa-free / visa-on-arrival places
+
+# --- What counts as "near by" ---
+max_distance_km: 3500            # Gulf, Levant, Egypt, Turkey, Caucasus, etc.
+max_destinations: 30             # cap API calls per run
+include_countries: []            # always include these ISO3 (overrides distance)
+exclude_countries: []            # never include these ISO3
+destinations: []                 # optional: force-check specific IATA codes
+                                 #   e.g. [JED, DMM, DXB, BAH, DOH, MCT, CAI]
+
+# --- Weekend pattern (Thu / Fri out, Sat / Sun back) ---
+weekend:
+  depart_days: [thu, fri]
+  return_days: [sat, sun]
+  min_nights: 1
+  max_nights: 3
+window_weeks: 8                  # how far ahead to scan
+
+# --- Run cadence (used with --loop) ---
+interval_seconds: 21600          # 6 hours
+state_file: weekendwander_state.db
+notify_header: "Weekend flight deals from Riyadh"
+
+# --- Notifications (toggle channels; creds via .env or here) ---
+notify:
+  console: true
+  telegram:
+    enabled: true
+    # bot_token + chat_id come from .env (TG_BOT_TOKEN / TG_CHAT_ID)
+  email:
+    enabled: false
+    smtp_host: smtp.gmail.com
+    smtp_port: 587
+    username: you@example.com
+    password: "app-password-here"
+    from_addr: you@example.com
+    to_addr: you@example.com
+    subject: "Weekend flight deals"

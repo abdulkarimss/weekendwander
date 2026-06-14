@@ -1,0 +1,2 @@
+# Run WeekendWander every 6 hours. Edit paths, then: crontab -e
+0 */6 * * * cd /opt/weekendwander && TP_TOKEN=xxx TG_BOT_TOKEN=xxx TG_CHAT_ID=xxx /usr/bin/python3 -m weekendwander.cli --config config.yaml >> ww.log 2>&1
