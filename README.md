@@ -121,6 +121,21 @@ Set your trip on the left, press **Search** (or `Ctrl-S`), and matching deals
 — with visa tags — appear on the right. It runs the same `find_deals`
 pipeline; secrets still come from `.env`.
 
+### Web UI
+
+Prefer a browser? Same form + live-streaming results, served locally (needs
+`flask`):
+
+```bash
+set -a; source .env; set +a            # so the provider can read its token
+python -m weekendwander.web --config config.yaml   # → http://127.0.0.1:8000
+```
+
+Results stream in over Server-Sent Events (progress, then a card per deal with
+airline / flight number / aircraft / routing / visa). Bind elsewhere with
+`--host 0.0.0.0 --port 8000`. It's the Flask dev server — fine for personal/LAN
+use, not a public deployment.
+
 ---
 
 ## Deploy (pick one) — see `deploy/`

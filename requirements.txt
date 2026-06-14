@@ -8,3 +8,6 @@ typing_extensions>=4.0   # transitive dep of fast-flights, not always pinned
 
 # Only needed for the interactive TUI (`python -m weekendwander.tui`).
 textual>=0.80
+
+# Only needed for the web UI (`python -m weekendwander.web`).
+flask>=3.0
