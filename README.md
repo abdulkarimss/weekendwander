@@ -1,5 +1,7 @@
 # WeekendWander ✈️
 
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+
 A small engine that watches for **cheap weekend flights** from your home
 airport and **pings you** (Telegram/email) when it finds one — domestic or
 international — and tells you **whether you need a visa** for each destination.
