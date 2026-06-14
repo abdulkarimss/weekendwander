@@ -1,7 +1,7 @@
 # ── WeekendWander config ──────────────────────────────────────────────
 # Secrets (tokens) do NOT go here — set them in .env (see .env.example).
 
-provider: travelpayouts          # flight price source: travelpayouts | google
+provider: travelpayouts          # flight price source: travelpayouts | google | amadeus
 
 # Settings for `provider: google` (Google Flights via the fast-flights scraper).
 # No token needed, but scraping is slow/brittle — point it at an explicit
@@ -9,6 +9,15 @@ provider: travelpayouts          # flight price source: travelpayouts | google
 google:
   pairs_per_month: 4             # weekend date-pairs to price per dest per month
   pause: 1.0                     # seconds between Google queries (be gentle)
+
+# Settings for `provider: amadeus` (Amadeus Self-Service — real fares, free
+# monthly quota). Needs AMADEUS_CLIENT_ID / AMADEUS_CLIENT_SECRET in .env.
+# Like google, it prices an explicit `destinations` list date-pair by date-pair.
+amadeus:
+  environment: test              # test | production (separate credentials each)
+  max_results: 5                 # offers to fetch per query (cheapest is kept)
+  pairs_per_month: 4             # weekend date-pairs to price per dest per month
+  pause: 0.2                     # seconds between API calls
 
 # --- Where you fly from / who you are ---
 origin: RUH                      # your home airport (IATA). RUH = Riyadh
@@ -19,17 +28,28 @@ currency: sar
 market: sa
 
 # --- What counts as a deal ---
-max_price: 1200                  # only notify on round-trips at/under this (SAR)
+max_price: 2500                  # only notify on round-trips at/under this (SAR)
 direct_only: false               # true = non-stop flights only
 easy_visa_only: false            # true = only visa-free / visa-on-arrival places
 
-# --- What counts as "near by" ---
-max_distance_km: 3500            # Gulf, Levant, Egypt, Turkey, Caucasus, etc.
-max_destinations: 30             # cap API calls per run
-include_countries: []            # always include these ISO3 (overrides distance)
+# --- How far you'll fly ---
+max_hours: 6                     # target flight time (great-circle proxy, ~800km/h).
+                                 #   ~6h from RUH ≈ Europe, N/E Africa, much of Asia.
+max_distance_km: 6000            # used only if max_hours is unset
+max_destinations: 50             # cap on destinations checked per run (API budget!)
+include_countries: []            # always include these ISO3
 exclude_countries: []            # never include these ISO3
-destinations: []                 # optional: force-check specific IATA codes
-                                 #   e.g. [JED, DMM, DXB, BAH, DOH, MCT, CAI]
+# Listed destinations are ALWAYS checked, even beyond max_hours.
+#   AUTO-SWEEP mode: set `destinations: []` and the provider checks the nearest
+#   airports within reach automatically (raise max_destinations for more). On
+#   Google keep it modest — it's slow + flaky; sweeping hundreds isn't practical.
+# A broad explorer set (~48 hubs across Europe/Asia/Africa):
+destinations: [DXB, AUH, SHJ, DOH, BAH, KWI, MCT, JED, DMM,                # Gulf + Saudi
+               IST, SAW, AYT, ESB, TBS, GYD, EVN,                          # Türkiye + Caucasus
+               AMM, BEY,                                                   # Levant
+               CAI, HRG, SSH, ADD, NBO, KRT, DAR, ZNZ,                     # Africa
+               ATH, SKG, FCO, MXP, VCE, VIE, MUC, ZRH, BUD, OTP, SOF, BEG, PRG,  # Europe
+               DEL, BOM, KHI, ISB, LHE, CMB, MLE, KTM, DAC]                # South Asia
 
 # --- Weekend pattern (Thu / Fri out, Sat / Sun back) ---
 weekend:

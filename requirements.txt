@@ -5,3 +5,6 @@ PyYAML>=6.0
 # Safe to omit if you use the default travelpayouts provider.
 fast-flights>=2.2
 typing_extensions>=4.0   # transitive dep of fast-flights, not always pinned
+
+# Only needed for the interactive TUI (`python -m weekendwander.tui`).
+textual>=0.80

@@ -62,10 +62,22 @@ cp config.example.yaml config.yaml      # then edit it (set nationality!)
 cp .env.example .env                     # then fill in tokens
 ```
 
-**1) Flight data token (free).** Sign up at https://www.travelpayouts.com →
-*Tools → API* → copy the token into `.env` as `TP_TOKEN`. Prices come from
-Aviasales' search cache, so they're indicative — the booking link opens the
-live search to confirm.
+**1) Flight data source.** Pick one with `provider:` in `config.yaml`:
+
+| `provider` | Cost | Data | Setup |
+|------------|------|------|-------|
+| `travelpayouts` | free | Aviasales search-cache prices (indicative) | `TP_TOKEN` in `.env` |
+| `amadeus` | free monthly quota | real GDS round-trip fares | `AMADEUS_CLIENT_ID`/`AMADEUS_CLIENT_SECRET` in `.env` |
+| `google` | free (no token) | Google Flights via unofficial scraper (brittle) | none |
+
+- **travelpayouts** — sign up at https://www.travelpayouts.com → *Tools → API*
+  → copy the token into `.env`. Prices are indicative; the booking link opens
+  the live search to confirm.
+- **amadeus** — register at https://developers.amadeus.com for a key + secret
+  (test and production use separate creds; set `amadeus.environment`). Best for
+  accurate fares. Like `google`, it prices an explicit `destinations` list.
+- **google** — zero setup, but scraping fails intermittently; runs surface a
+  `⚠ N/M queries failed` warning when that happens.
 
 **2) Telegram (easiest alerts).**
 - Message **@BotFather** → `/newbot` → copy the token → `.env` `TG_BOT_TOKEN`.
@@ -94,6 +106,20 @@ Verify the logic offline (uses real visa data + a mock flight feed):
 ```bash
 python selftest.py
 ```
+
+### Interactive TUI
+
+Prefer to pick your passport, origin, weekend pattern, budget and provider
+on screen instead of editing the config? Launch the full-screen TUI (needs
+`textual`):
+
+```bash
+python -m weekendwander.tui --config config.yaml   # --config is optional
+```
+
+Set your trip on the left, press **Search** (or `Ctrl-S`), and matching deals
+— with visa tags — appear on the right. It runs the same `find_deals`
+pipeline; secrets still come from `.env`.
 
 ---
 
@@ -134,8 +160,10 @@ cli.py ─ load config + env (.env keeps secrets out of the file)
   └─ notify.py           Telegram / email / console
 ```
 
-Swap in another price source (e.g. Amadeus Self-Service) by subclassing
-`BaseProvider` in `providers.py` — `finder` doesn't care where offers come from.
+Add another price source by subclassing `BaseProvider` (or
+`_WeekendPairProvider` if it can only be queried by date-pair) in
+`providers.py` and wiring it into `build_provider` — `finder` doesn't care
+where offers come from.
 
 Data: `data/airports.json` (OpenFlights, IATA→country+coords),
 `data/visa_iso3.csv` (passport-index dataset). Refresh either occasionally.
