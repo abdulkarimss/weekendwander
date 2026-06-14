@@ -14,8 +14,13 @@ def _fmt_deal(d):
     stops = "non-stop" if not d["transfers"] else f"{d['transfers']} stop(s)"
     line = (f"{d['city']} ({d['destination']}) · {d['country']}\n"
             f"  {int(round(d['price']))} {d['currency']}  |  {stops}\n"
-            f"  Out {dep}  →  Back {ret}\n"
-            f"  {flag} Visa: {visa}")
+            f"  Out {dep}  →  Back {ret}")
+    bits = [b for b in (d.get("airline"), d.get("flight_number"), d.get("aircraft")) if b]
+    if bits:
+        line += "\n  ✈ " + "  ·  ".join(bits)
+    if d.get("route"):
+        line += f"\n  ↳ {d['route']}"
+    line += f"\n  {flag} Visa: {visa}"
     if d.get("link"):
         line += f"\n  Book: {d['link']}"
     return line

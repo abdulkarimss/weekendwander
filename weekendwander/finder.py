@@ -70,6 +70,13 @@ def find_deals(provider, cfg, log=print):
     currency = cfg.get("currency", "sar")
     market = cfg.get("market", "sa")
 
+    # `max_hours` is the friendlier knob: how long you're willing to fly. We
+    # turn it into a great-circle distance proxy (~800 km/h block speed) that
+    # the nearness filter understands. Falls back to max_distance_km.
+    if cfg.get("max_hours"):
+        cfg = {**cfg, "max_distance_km": int(cfg["max_hours"] * 800)}
+        log(f"Reach: ~{cfg['max_hours']}h flight (≈{cfg['max_distance_km']} km) from {origin}")
+
     log(f"Discovering destinations from {origin} ...")
     try:
         candidates = provider.discover(origin, currency, market)
@@ -78,21 +85,27 @@ def find_deals(provider, cfg, log=print):
         candidates = []
     # union with any explicitly configured destinations
     candidates = list(dict.fromkeys(candidates + cfg.get("destinations", [])))
-    # keep only nearby / allowed, cap the count
-    nearby = [c for c in candidates if c.upper() != origin and _is_nearby(origin, c, cfg)]
+    # destinations you list explicitly are always honored; the distance filter
+    # only prunes auto-discovered candidates.
+    configured = {c.upper() for c in cfg.get("destinations", [])}
+    nearby = [c for c in candidates if c.upper() != origin
+              and (c.upper() in configured or _is_nearby(origin, c, cfg))]
     nearby = nearby[: cfg.get("max_destinations", 30)]
-    log(f"  {len(candidates)} reachable, {len(nearby)} within range/allow-list")
+    log(f"  {len(candidates)} reachable, {len(nearby)} to check "
+        f"({len(configured)} explicit + within range)")
 
     months = _months_ahead(cfg["window_weeks"])
     deals = []
     seen = set()
-    for dest in nearby:
+    for i, dest in enumerate(nearby, 1):
+        log(f"  [{i}/{len(nearby)}] checking {dest} ({airports.city_name(dest)}) ...")
+        found_here = 0
         for month in months:
             try:
                 offers = provider.dated_offers(origin, dest, month, currency, market,
                                                direct=cfg.get("direct_only", False))
             except Exception as e:
-                log(f"  {dest} {month}: {e}")
+                log(f"      {dest} {month}: {e}")
                 continue
             for o in offers:
                 if o["price"] > budget:
@@ -113,5 +126,15 @@ def find_deals(provider, cfg, log=print):
                     "visa": v,
                 })
                 deals.append(o)
+                found_here += 1
+        log(f"      {found_here} match(es) under budget")
+
+    # Surface data-source trouble: a broken/blocked scraper otherwise looks
+    # identical to "no deals found".
+    stats = getattr(provider, "stats", None)
+    if stats and stats.get("errors"):
+        log(f"  ⚠ data source failed on {stats['errors']}/{stats['queries']} "
+            f"queries — results may be incomplete (last: {stats.get('last_error')})")
+
     deals.sort(key=lambda x: x["price"])
     return deals
