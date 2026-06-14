@@ -1,2 +1,7 @@
 requests>=2.31
 PyYAML>=6.0
+
+# Only needed for `provider: google` (Google Flights via unofficial scraper).
+# Safe to omit if you use the default travelpayouts provider.
+fast-flights>=2.2
+typing_extensions>=4.0   # transitive dep of fast-flights, not always pinned

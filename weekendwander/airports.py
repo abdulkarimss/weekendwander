@@ -14,6 +14,12 @@ def get(iata: str):
     return _AIRPORTS.get((iata or "").upper())
 
 
+def all_iata():
+    """Every known IATA code (providers without a discovery endpoint can
+    propose these and let the finder apply the nearness filter)."""
+    return list(_AIRPORTS.keys())
+
+
 def country_iso3(iata: str):
     a = get(iata)
     return a["iso3"] if a else None

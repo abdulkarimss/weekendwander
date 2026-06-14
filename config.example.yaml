@@ -1,7 +1,14 @@
 # ── WeekendWander config ──────────────────────────────────────────────
 # Secrets (tokens) do NOT go here — set them in .env (see .env.example).
 
-provider: travelpayouts          # flight price source
+provider: travelpayouts          # flight price source: travelpayouts | google
+
+# Settings for `provider: google` (Google Flights via the fast-flights scraper).
+# No token needed, but scraping is slow/brittle — point it at an explicit
+# `destinations` list with a small window_weeks. Ignored by other providers.
+google:
+  pairs_per_month: 4             # weekend date-pairs to price per dest per month
+  pause: 1.0                     # seconds between Google queries (be gentle)
 
 # --- Where you fly from / who you are ---
 origin: RUH                      # your home airport (IATA). RUH = Riyadh
